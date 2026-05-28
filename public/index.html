@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视频效果分析工具</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🎬 视频效果分析工具</h1>
+    <nav>
+      <button class="nav-btn active" data-tab="upload">上传视频</button>
+      <button class="nav-btn" data-tab="videos">视频列表</button>
+      <button class="nav-btn" data-tab="analytics">数据分析</button>
+      <button class="nav-btn" data-tab="trending">热门排行</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="upload" class="tab-content active">
+      <div class="upload-container">
+        <h2>上传新视频</h2>
+        <form id="upload-form">
+          <input type="text" id="video-title" placeholder="视频标题" required>
+          <textarea id="video-description" placeholder="视频描述"></textarea>
+          <input type="file" id="video-file" accept="video/*" required>
+          <button type="submit">上传</button>
+        </form>
+        <div id="upload-status"></div>
+      </div>
+    </section>
+
+    <section id="videos" class="tab-content">
+      <h2>视频列表</h2>
+      <div id="videos-container"></div>
+    </section>
+
+    <section id="analytics" class="tab-content">
+      <h2>数据分析</h2>
+      <div class="analytics-container">
+        <div class="video-selector">
+          <select id="analytics-video-select">
+            <option value="">选择视频</option>
+          </select>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="total-views">0</div>
+            <div class="stat-label">总播放量</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="total-likes">0</div>
+            <div class="stat-label">总点赞数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="total-comments">0</div>
+            <div class="stat-label">总评论数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="avg-completion">0%</div>
+            <div class="stat-label">平均完播率</div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="views-chart"></canvas>
+        </div>
+        <div class="analytics-form">
+          <h3>添加数据分析记录</h3>
+          <form id="analytics-form">
+            <input type="number" id="analytics-views" placeholder="播放量" required>
+            <input type="number" id="analytics-likes" placeholder="点赞数" required>
+            <input type="number" id="analytics-comments" placeholder="评论数" required>
+            <input type="number" id="analytics-shares" placeholder="分享数" required>
+            <input type="number" id="analytics-completion" placeholder="完播率(%)" max="100" required>
+            <button type="submit">添加记录</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="trending" class="tab-content">
+      <h2>热门视频排行</h2>
+      <div id="trending-container"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
