@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 
@@ -10,12 +9,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
-
-mongoose.connect('mongodb://localhost:27017/video_analytics', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -28,113 +21,125 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-const Video = require('./models/Video');
-const Analytics = require('./models/Analytics');
+let videos = [];
+let analytics = [];
+let videoIdCounter = 1;
+let analyticsIdCounter = 1;
 
-app.post('/api/videos', upload.single('video'), async (req, res) => {
-  try {
-    const video = new Video({
-      title: req.body.title,
-      description: req.body.description,
-      filePath: '/uploads/' + req.file.filename,
-      uploadTime: new Date()
-    });
-    await video.save();
-    res.status(201).json(video);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.post('/api/videos', upload.single('video'), (req, res) => {
+  const video = {
+    _id: videoIdCounter++,
+    title: req.body.title,
+    description: req.body.description,
+    filePath: '/uploads/' + req.file.filename,
+    uploadTime: new Date()
+  };
+  videos.push(video);
+  res.status(201).json(video);
 });
 
-app.get('/api/videos', async (req, res) => {
-  try {
-    const videos = await Video.find().sort({ uploadTime: -1 });
-    res.json(videos);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.get('/api/videos', (req, res) => {
+  const sortedVideos = [...videos].sort((a, b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+  res.json(sortedVideos);
 });
 
-app.get('/api/videos/:id', async (req, res) => {
-  try {
-    const video = await Video.findById(req.params.id);
-    if (!video) return res.status(404).json({ error: 'Video not found' });
-    res.json(video);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.get('/api/videos/:id', (req, res) => {
+  const video = videos.find(v => v._id == req.params.id);
+  if (!video) return res.status(404).json({ error: 'Video not found' });
+  res.json(video);
 });
 
-app.delete('/api/videos/:id', async (req, res) => {
-  try {
-    await Video.findByIdAndDelete(req.params.id);
-    await Analytics.deleteMany({ videoId: req.params.id });
-    res.json({ message: 'Video deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.delete('/api/videos/:id', (req, res) => {
+  const videoIndex = videos.findIndex(v => v._id == req.params.id);
+  if (videoIndex === -1) return res.status(404).json({ error: 'Video not found' });
+  videos.splice(videoIndex, 1);
+  analytics = analytics.filter(a => a.videoId != req.params.id);
+  res.json({ message: 'Video deleted successfully' });
 });
 
-app.post('/api/analytics', async (req, res) => {
-  try {
-    const analytics = new Analytics(req.body);
-    await analytics.save();
-    res.status(201).json(analytics);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.post('/api/analytics', (req, res) => {
+  const record = {
+    _id: analyticsIdCounter++,
+    videoId: req.body.videoId,
+    date: new Date(),
+    views: req.body.views || 0,
+    likes: req.body.likes || 0,
+    comments: req.body.comments || 0,
+    shares: req.body.shares || 0,
+    completionRate: req.body.completionRate || 0,
+    watchTime: req.body.watchTime || 0
+  };
+  analytics.push(record);
+  res.status(201).json(record);
 });
 
-app.get('/api/analytics/video/:videoId', async (req, res) => {
-  try {
-    const analytics = await Analytics.find({ videoId: req.params.videoId }).sort({ date: -1 });
-    res.json(analytics);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.get('/api/analytics/video/:videoId', (req, res) => {
+  const videoAnalytics = analytics.filter(a => a.videoId == req.params.videoId);
+  const sortedAnalytics = videoAnalytics.sort((a, b) => new Date(b.date) - new Date(a.date));
+  res.json(sortedAnalytics);
 });
 
-app.get('/api/analytics/summary/:videoId', async (req, res) => {
-  try {
-    const analytics = await Analytics.find({ videoId: req.params.videoId });
-    const summary = {
-      totalViews: analytics.reduce((sum, a) => sum + a.views, 0),
-      totalLikes: analytics.reduce((sum, a) => sum + a.likes, 0),
-      totalComments: analytics.reduce((sum, a) => sum + a.comments, 0),
-      totalShares: analytics.reduce((sum, a) => sum + a.shares, 0),
-      avgCompletionRate: analytics.length > 0 
-        ? analytics.reduce((sum, a) => sum + a.completionRate, 0) / analytics.length 
-        : 0,
-      trend: analytics.map(a => ({ date: a.date, views: a.views })).reverse()
+app.get('/api/analytics/summary/:videoId', (req, res) => {
+  const videoAnalytics = analytics.filter(a => a.videoId == req.params.videoId);
+  const summary = {
+    totalViews: videoAnalytics.reduce((sum, a) => sum + a.views, 0),
+    totalLikes: videoAnalytics.reduce((sum, a) => sum + a.likes, 0),
+    totalComments: videoAnalytics.reduce((sum, a) => sum + a.comments, 0),
+    totalShares: videoAnalytics.reduce((sum, a) => sum + a.shares, 0),
+    avgCompletionRate: videoAnalytics.length > 0 
+      ? videoAnalytics.reduce((sum, a) => sum + a.completionRate, 0) / videoAnalytics.length 
+      : 0,
+    trend: videoAnalytics.map(a => ({ date: a.date, views: a.views })).sort((a, b) => new Date(a.date) - new Date(b.date))
+  };
+  res.json(summary);
+});
+
+app.get('/api/analytics/trending', (req, res) => {
+  const summaries = videos.map(video => {
+    const videoAnalytics = analytics.filter(a => a.videoId == video._id);
+    return {
+      videoId: video._id,
+      title: video.title,
+      totalViews: videoAnalytics.reduce((sum, a) => sum + a.views, 0),
+      totalLikes: videoAnalytics.reduce((sum, a) => sum + a.likes, 0),
+      uploadTime: video.uploadTime
     };
-    res.json(summary);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  });
+  summaries.sort((a, b) => b.totalViews - a.totalViews);
+  res.json(summaries.slice(0, 10));
 });
 
-app.get('/api/analytics/trending', async (req, res) => {
-  try {
-    const videos = await Video.find();
-    const summaries = await Promise.all(
-      videos.map(async video => {
-        const analytics = await Analytics.find({ videoId: video._id });
-        return {
-          videoId: video._id,
-          title: video.title,
-          totalViews: analytics.reduce((sum, a) => sum + a.views, 0),
-          totalLikes: analytics.reduce((sum, a) => sum + a.likes, 0),
-          uploadTime: video.uploadTime
-        };
-      })
-    );
-    summaries.sort((a, b) => b.totalViews - a.totalViews);
-    res.json(summaries.slice(0, 10));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+const generateMockData = () => {
+  const mockVideos = [
+    { title: '夏日穿搭分享', description: '分享今天的夏日穿搭，清凉又时尚', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-15') },
+    { title: '美食探店vlog', description: '打卡网红餐厅，味道超赞', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-18') },
+    { title: '护肤好物推荐', description: '近期爱用的护肤品分享', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-20') },
+    { title: '旅行日记', description: '周末短途旅行vlog', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-22') },
+    { title: '日常妆容教程', description: '日常通勤妆，简单又好看', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-25') }
+  ];
+
+  mockVideos.forEach((video, index) => {
+    video._id = videoIdCounter++;
+    videos.push(video);
+    
+    for (let i = 0; i < 7; i++) {
+      analytics.push({
+        _id: analyticsIdCounter++,
+        videoId: video._id,
+        date: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
+        views: Math.floor(Math.random() * 5000) + 1000,
+        likes: Math.floor(Math.random() * 500) + 100,
+        comments: Math.floor(Math.random() * 50) + 10,
+        shares: Math.floor(Math.random() * 30) + 5,
+        completionRate: Math.floor(Math.random() * 40) + 50,
+        watchTime: Math.floor(Math.random() * 300) + 60
+      });
+    }
+  });
+};
+
+generateMockData();
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
