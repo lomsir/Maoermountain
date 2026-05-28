@@ -148,11 +148,30 @@ h2 {
   box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
 }
 
-.video-card video {
+.video-thumbnail {
   width: 150px;
   height: 100px;
-  object-fit: cover;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnail-icon {
+  font-size: 40px;
+}
+
+.video-link {
+  display: inline-block;
+  margin-bottom: 5px;
+  color: #667eea;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.video-link:hover {
+  text-decoration: underline;
 }
 
 .video-info {

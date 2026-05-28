@@ -1,7 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const multer = require('multer');
-const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,28 +8,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-
-const upload = multer({ storage: storage });
-
 let videos = [];
 let analytics = [];
 let videoIdCounter = 1;
 let analyticsIdCounter = 1;
 
-app.post('/api/videos', upload.single('video'), (req, res) => {
+app.post('/api/videos', (req, res) => {
   const video = {
     _id: videoIdCounter++,
     title: req.body.title,
     description: req.body.description,
-    filePath: '/uploads/' + req.file.filename,
+    link: req.body.link || '',
     uploadTime: new Date()
   };
   videos.push(video);
@@ -111,11 +98,11 @@ app.get('/api/analytics/trending', (req, res) => {
 
 const generateMockData = () => {
   const mockVideos = [
-    { title: '夏日穿搭分享', description: '分享今天的夏日穿搭，清凉又时尚', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-15') },
-    { title: '美食探店vlog', description: '打卡网红餐厅，味道超赞', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-18') },
-    { title: '护肤好物推荐', description: '近期爱用的护肤品分享', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-20') },
-    { title: '旅行日记', description: '周末短途旅行vlog', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-22') },
-    { title: '日常妆容教程', description: '日常通勤妆，简单又好看', filePath: '/uploads/demo.mp4', uploadTime: new Date('2024-01-25') }
+    { title: '夏日穿搭分享', description: '分享今天的夏日穿搭，清凉又时尚', link: '', uploadTime: new Date('2024-01-15') },
+    { title: '美食探店vlog', description: '打卡网红餐厅，味道超赞', link: '', uploadTime: new Date('2024-01-18') },
+    { title: '护肤好物推荐', description: '近期爱用的护肤品分享', link: '', uploadTime: new Date('2024-01-20') },
+    { title: '旅行日记', description: '周末短途旅行vlog', link: '', uploadTime: new Date('2024-01-22') },
+    { title: '日常妆容教程', description: '日常通勤妆，简单又好看', link: '', uploadTime: new Date('2024-01-25') }
   ];
 
   mockVideos.forEach((video, index) => {

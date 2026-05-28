@@ -43,17 +43,20 @@ function displayVideos(videos) {
   const container = document.getElementById('videos-container');
   
   if (videos.length === 0) {
-    container.innerHTML = '<p style="text-align: center; color: #999;">暂无视频，请先上传</p>';
+    container.innerHTML = '<p style="text-align: center; color: #999;">暂无视频，请先添加</p>';
     return;
   }
 
   container.innerHTML = videos.map(video => `
     <div class="video-card">
-      <video src="${API_BASE}${video.filePath}" controls></video>
+      <div class="video-thumbnail">
+        <span class="thumbnail-icon">📹</span>
+      </div>
       <div class="video-info">
         <h3>${video.title}</h3>
         <p>${video.description || '暂无描述'}</p>
-        <div class="upload-time">上传时间: ${new Date(video.uploadTime).toLocaleString()}</div>
+        ${video.link ? `<a href="${video.link}" target="_blank" class="video-link">🔗 查看视频</a>` : ''}
+        <div class="upload-time">添加时间: ${new Date(video.uploadTime).toLocaleString()}</div>
         <div class="video-actions">
           <button class="view-btn" onclick="viewAnalytics('${video._id}')">查看分析</button>
           <button class="delete-btn" onclick="deleteVideo('${video._id}')">删除</button>
@@ -92,36 +95,32 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
   
   const title = document.getElementById('video-title').value;
   const description = document.getElementById('video-description').value;
-  const file = document.getElementById('video-file').files[0];
-  
-  const formData = new FormData();
-  formData.append('title', title);
-  formData.append('description', description);
-  formData.append('video', file);
+  const link = document.getElementById('video-link').value;
   
   const status = document.getElementById('upload-status');
-  status.textContent = '上传中...';
+  status.textContent = '添加中...';
   status.className = '';
   
   try {
     const response = await fetch(`${API_BASE}/videos`, {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description, link })
     });
     
     if (response.ok) {
-      status.textContent = '上传成功！';
+      status.textContent = '添加成功！';
       status.className = 'success';
       document.getElementById('upload-form').reset();
       loadVideos();
       loadTrending();
       loadVideoSelector();
     } else {
-      status.textContent = '上传失败，请重试';
+      status.textContent = '添加失败，请重试';
       status.className = 'error';
     }
   } catch (error) {
-    status.textContent = '上传失败: ' + error.message;
+    status.textContent = '添加失败: ' + error.message;
     status.className = 'error';
   }
 });
