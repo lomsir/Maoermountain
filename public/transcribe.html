@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>录音转文本工具</title>
+  <link rel="stylesheet" href="transcribe.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎙️ 录音转文本工具</h1>
+      <p>支持实时录音和上传音频文件转写</p>
+    </header>
+
+    <main>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="record">实时录音</button>
+        <button class="tab-btn" data-tab="upload">上传文件</button>
+        <button class="tab-btn" data-tab="history">转换历史</button>
+      </div>
+
+      <!-- 实时录音 -->
+      <section id="record" class="tab-content active">
+        <div class="record-section">
+          <div class="record-controls">
+            <button id="start-record" class="record-btn" disabled>
+              <span class="btn-icon">🎤</span>
+              <span>开始录音</span>
+            </button>
+            <button id="stop-record" class="stop-btn" disabled>
+              <span class="btn-icon">⏹️</span>
+              <span>停止录音</span>
+            </button>
+          </div>
+          <div id="recording-status" class="status">
+            <span id="status-text">点击开始录音</span>
+            <span id="recording-time">00:00</span>
+          </div>
+          <div id="audio-preview" class="audio-preview"></div>
+        </div>
+      </section>
+
+      <!-- 上传文件 -->
+      <section id="upload" class="tab-content">
+        <div class="upload-section">
+          <div class="upload-area" id="upload-area">
+            <span class="upload-icon">📁</span>
+            <p>拖拽音频文件到这里</p>
+            <p class="hint">支持 MP3, WAV, OGG, FLAC 格式</p>
+            <input type="file" id="audio-file" accept="audio/*" hidden>
+            <button id="select-file" class="select-btn">选择文件</button>
+          </div>
+          <div id="file-info" class="file-info"></div>
+        </div>
+      </section>
+
+      <!-- 转换历史 -->
+      <section id="history" class="tab-content">
+        <div id="history-container" class="history-container"></div>
+      </section>
+
+      <!-- 转换结果 -->
+      <div id="transcription-result" class="result-section">
+        <h3>转换结果</h3>
+        <div class="result-toolbar">
+          <button id="copy-btn" class="toolbar-btn" disabled>📋 复制文本</button>
+          <button id="download-btn" class="toolbar-btn" disabled>📥 下载文本</button>
+          <button id="save-btn" class="toolbar-btn" disabled>💾 保存记录</button>
+        </div>
+        <textarea id="result-text" readonly placeholder="转换结果将显示在这里..."></textarea>
+      </div>
+    </main>
+  </div>
+
+  <script src="transcribe.js"></script>
+</body>
+</html>

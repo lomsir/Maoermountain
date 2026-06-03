@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -126,6 +127,30 @@ const generateMockData = () => {
 };
 
 generateMockData();
+
+app.post('/api/transcribe', (req, res) => {
+  const mockTranscriptions = [
+    '今天天气真好，我想出去走走，顺便买些东西回来。',
+    '这个项目非常重要，我们需要认真对待，确保按时完成。',
+    '你好，我是客服人员，请问有什么可以帮助你的吗？',
+    '会议将在下午三点准时开始，请大家提前做好准备。',
+    '感谢您的收听，我们下次节目再见。'
+  ];
+  
+  const randomIndex = Math.floor(Math.random() * mockTranscriptions.length);
+  
+  setTimeout(() => {
+    res.json({
+      text: mockTranscriptions[randomIndex],
+      filename: req.body.filename,
+      status: 'completed'
+    });
+  }, 1500);
+});
+
+app.get('/transcribe', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/transcribe.html'));
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
